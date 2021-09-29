@@ -18,6 +18,24 @@ Most basic use case:
 1. Run `org-roam-timestamps-all`. This will add ctime and mtime properties to all the property drawers of your notes. This might take a while. It will make backups of your notes and org-roam-db in case anything goes wrong, but back them up yourself as well!
 2. Keep `org-roam-timestamps-mode` running while you do your org-roam-business.
 
+
+* Installation
+
+We ain't on MELPA yet.
+
+** Doom emacs
+
+#+begin_src emacs-lisp :tangle yes
+;;packages.el
+(package! org-roam-ui :recipe (:host github :repo "ThomasFKJorna/org-roam-timestamps"))
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+(use-package! org-roam-timestamps
+  :after org-roam
+  :config (org-roam-timestamps-mode))
+#+end_src
+
 * Customizations
 
 Org-roam-timestamps exposes three variables for customization
