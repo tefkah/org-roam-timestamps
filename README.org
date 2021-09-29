@@ -5,7 +5,7 @@
 
 Small package to keep track of the modification and creation time of individual nodes.
 
-I created this to use mtime data in [[https://github.org/org-roam/org-roam-ui][org-roam-ui]], and it is highly recommended you use this package if you are using org-roam-ui to get the most out of that.
+I created this to use mtime data in [[https://github.com/org-roam/org-roam-ui][org-roam-ui]], and it is highly recommended you use this package if you are using org-roam-ui to get the most out of that.
 
 Offers two pieces of functionality:
 1. Add creation and modification properties to all nodes.
