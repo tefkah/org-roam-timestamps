@@ -53,23 +53,34 @@
 (defun org-roam-timestamps-all ()
   "Go through all nodes and add timestamps to them."
   (interactive)
+  (when (yes-or-no-p "This will modify all your current notes by adding a ctime and mtime property
+to all property drawers. We will make a backup of your notes first.
+This might take a second. Are you sure you want to continue?")
+    (let ((backup-dir (expand-file-name "org-roam-timestamp.bak"
+                                         (file-name-directory (directory-file-name org-roam-directory)))))
+      (message "Backing up files to %s" backup-dir)
+      (copy-directory org-roam-directory backup-dir))
   (let ((nodes (org-roam-db-query [:select id :from nodes])))
     (dolist (node nodes)
       (let* ((n (org-roam-populate (org-roam-node-create :id (car node))))
              (file (org-roam-node-file n))
              (mtime (org-roam-timestamps-decode (org-roam-node-file-mtime n)))
              (pos (org-roam-node-point n))
+             (props (org-roam-node-properties n))
              (level (org-roam-node-level n))
              (title (org-roam-node-title n)))
             (org-roam-with-file file nil
               (goto-char pos)
-              (org-roam-add-property mtime "mtime")
+              (unless (assoc-default "MTIME" props)
+              (org-roam-add-property mtime "mtime"))
+              (unless (assoc-default "CTIME" props)
                   (if-let ((filename (file-name-base file))
                            (index (string-match "^[0-9]\\{14\\}" filename))
                            (timestamp (substring filename index (+ index 14))))
                       (org-roam-add-property timestamp "ctime")
-                    (org-roam-add-property mtime "ctime"))
+                    (org-roam-add-property mtime "ctime")))
                   (save-buffer))))))
+  (org-roam-db-sync))
 
 (provide 'org-roam-timestamps)
 ;;; org-roam-timestamps.el ends here
