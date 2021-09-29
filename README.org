@@ -1,0 +1,89 @@
+#+TITLE: Readme
+
+
+* org-roam-timestamps
+
+Small package to keep track of the modification and creation time of individual nodes.
+
+I created this to use mtime data in [[https://github.org/org-roam/org-roam-ui][org-roam-ui]], and it is highly recommended you use this package if you are using org-roam-ui to get the most out of that.
+
+Offers two pieces of functionality:
+1. Add creation and modification properties to all nodes.
+2. Keep the mtime property of a node updated.
+
+* How to use
+
+Most basic use case:
+
+1. Run `org-roam-timestamps-timestamp-all`. This will add ctime and mtime properties to all the property drawers of your notes. This might take a while. It will make backups of your notes and org-roam-db in case anything goes wrong, but back them up yourself as well!
+2. Keep `org-roam-timestamps-mode` running while you do your org-roam-business.
+
+* Customizations
+
+Org-roam-timestamps exposes three variables for customization
+
+** Parent file
+#+begin_src emacs-lisp
+(setq org-roam-timestamps-parent-file t)
+#+end_src
+
+This will also update the parent file when you update a subnote.
+
+** Remember timestamps
+
+#+begin_src emacs-lisp :tangle yes
+(setq org-roam-timestamps-remember-timestamps t)
+#+end_src
+
+This will remember previous mtimes and add the new timestamp to the front of the list rather than replace the old one. This will allow us to create git-like time-tracker-views in org-roam-ui, showing you when you modified which files.
+
+It will however clog up your properties drawer a lot more and of course increase file size.
+If you previously had this turned on but want to remove it for all files, run =org-roam-timestamps-clean-mtimes=.
+
+** Min gap
+#+begin_src emacs-lisp :tangle yes
+(setq org-roam-timestamps-minimum-gap 3600)
+#+end_src
+
+Minimum time in seconds between two timestamps. Defaults to an hour. Only does something if =org-roam-timestamps-remember-timestamps= is =t=
+
+* Caveats
+
+This package is not working flawlessly yet.
+
+** Saving
+
+Since org-roam does not really store any data about the contents of the current node, I can't really check whether the current node has been changed at all. There are four ways to possibly get around this:
+
+*** Save copy of previous node
+
+This would be the most accurate way to check whether the current node has been modified, by doing an actual comparison with the previous state. This would end up doubling the whole node though, which sucks.
+
+*** Git
+
+Next best option would be to compare the current state to the latest git state. This is kind of annoying though, and would rely on you keeping an accurate git repo of your notes. Since I personally am not that accurate with it, and I want this package to be useable without git (as org-roam(-ui) is), this is not an option.
+
+*** Size comparison
+
+Basic idea: store the previous size of the node in bytes in the property drawer.
+
+Advantages:
+- Somewhat accurate
+
+Disadvantages:
+- Slower than the next option, as you need to check all nodes in the buffer.
+- Can't account for small updates (such as checking a list)
+- Yet more properties
+- Harder
+
+*** Just update the current node
+
+This is what we use atm. We just update the node the cursor is on when you save. This is not the best way to do this by a long shot, but it's fast and easy.
+
+I might update this in the future (and of course contributions are very welcome).
+
+** Smaller problems
+
+The smaller problems are
+- [ ] Flickering when org-roam-buffer is open
+- [ ] Slowish
