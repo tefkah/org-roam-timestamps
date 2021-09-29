@@ -1,7 +1,4 @@
-#+TITLE: Readme
-
-
-* org-roam-timestamps
+#+TITLE:  org-roam-timestamps
 
 Small package to keep track of the modification and creation time of individual nodes.
 
