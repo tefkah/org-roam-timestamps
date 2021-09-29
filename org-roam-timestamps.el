@@ -62,14 +62,14 @@ Defaults to an hour."
   (when (org-roam-buffer-p)
   (let* ((node (org-roam-populate (org-roam-node-create :id (org-roam-id-at-point))))
          (file (org-roam-node-file node))
-         (mtime (org-roam-timestamps--get-mtime node)))
+         (mtime (car (split-string (org-roam-timestamps--get-mtime node)))))
     (when org-roam-timestamps-timestamp-parent-file
         (org-roam-with-file file nil
           (save-excursion
           (goto-char (buffer-end -1))
           (let* ((pnode (org-roam-populate (org-roam-node-create :id (org-roam-id-at-point))))
                  (pfile (org-roam-node-file node))
-                 (pmtime (org-roam-timestamps--get-mtime node)))
+                 (pmtime (car (split-string (org-roam-timestamps--get-mtime node)))))
                 (unless org-roam-timestamps-remember-timestamps
                   (org-roam-timestamps--remove-current-mtime))
                 (org-roam-timestamps--add-mtime pmtime)))))
@@ -78,7 +78,7 @@ Defaults to an hour."
     (org-roam-timestamps--add-mtime mtime))))
 
 (defun org-roam-timestamps--add-mtime (&optional mtime)
-  "Add the current time to the node, mtime to the node.
+  "Add the current mtime to the node.
 Optionally checks the minimum time interval you want between mod times."
   (let ((curr (org-roam-timestamps-decode (current-time))))
     (if (and org-roam-timestamps-remember-timestamps mtime)
@@ -165,6 +165,29 @@ This might take a second. Are you sure you want to continue?")
                     (org-roam-add-property mtime "ctime")))
                   (save-buffer))))))
   (org-roam-db-sync))
+
+(defun org-roam-timestamps-clean-mtime ()
+  "Truncate all timestamps to a single value."
+  (interactive)
+  (org-roam-timestamps-mode -1)
+  (let ((nodes (org-roam-db-query [:select id :from nodes])))
+    (dolist (node nodes)
+      (let* ((n (org-roam-populate (org-roam-node-create :id (car node))))
+             (file (org-roam-node-file n))
+             (pos (org-roam-node-point n))
+             (props (org-roam-node-properties n))
+             (level (org-roam-node-level n))
+             (title (org-roam-node-title n)))
+            (org-roam-with-file file nil
+              (goto-char pos)
+      (if-let ((mtime (org-roam-timestamps--get-mtime n))
+               (split (split-string mtime)))
+       (unless (length= split 1)
+         (dolist (time split)
+         (org-roam-remove-property "mtime" time))
+         (org-roam-add-property (car split) "mtime")
+         (save-buffer)))))))
+  (org-roam-timestamps-mode 1))
 
 (provide 'org-roam-timestamps)
 ;;; org-roam-timestamps.el ends here

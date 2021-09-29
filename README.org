@@ -15,7 +15,7 @@ Offers two pieces of functionality:
 
 Most basic use case:
 
-1. Run `org-roam-timestamps-timestamp-all`. This will add ctime and mtime properties to all the property drawers of your notes. This might take a while. It will make backups of your notes and org-roam-db in case anything goes wrong, but back them up yourself as well!
+1. Run `org-roam-timestamps-all`. This will add ctime and mtime properties to all the property drawers of your notes. This might take a while. It will make backups of your notes and org-roam-db in case anything goes wrong, but back them up yourself as well!
 2. Keep `org-roam-timestamps-mode` running while you do your org-roam-business.
 
 * Customizations
