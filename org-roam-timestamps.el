@@ -72,7 +72,8 @@ Defaults to an hour."
                     (org-roam-add-property (org-roam-timestamps-decode (org-roam-node-file-mtime node)) "ctime")))
     (if-let ((mod-time (org-roam-timestamps--get-mtime node))
              (mtime (car (split-string mod-time ))))
-    (when org-roam-timestamps-timestamp-parent-file
+        (progn
+    (when (and org-roam-timestamps-timestamp-parent-file (not (eq (org-roam-node-level node) 0)))
         (org-roam-with-file file nil
           (save-excursion
           (goto-char (buffer-end -1))
@@ -80,16 +81,17 @@ Defaults to an hour."
                  (pfile (org-roam-node-file node))
                  (pmtime (car (split-string (org-roam-timestamps--get-mtime node)))))
                 (unless org-roam-timestamps-remember-timestamps
-                  (org-roam-timestamps--remove-current-mtime))
+                  (org-roam-timestamps--remove-current-mtime node))
                 (org-roam-timestamps--add-mtime pmtime)))))
     (unless org-roam-timestamps-remember-timestamps
-      (org-roam-timestamps--remove-current-mtime))
-    (org-roam-timestamps--add-mtime mtime)
+      (org-roam-timestamps--remove-current-mtime node))
+    (org-roam-timestamps--add-mtime mtime))
     (org-roam-add-property (org-roam-node-file-mtime node) "mtime")))))
 
 (defun org-roam-timestamps--add-mtime (&optional mtime)
   "Add the current mtime to the node.
-Optionally checks the minimum time interval you want between mod times."
+Optionally checks the minimum time interval you want between mod times when
+given MTIME in org-roam-timestamp formatted string."
   (let ((curr (org-roam-timestamps-decode (current-time))))
     (if (and org-roam-timestamps-remember-timestamps mtime)
       (when (> (org-roam-timestamps-subtract curr mtime t) org-roam-timestamps-minimum-gap)
@@ -108,11 +110,13 @@ Optionally checks the minimum time interval you want between mod times."
   (assoc-default "CTIME" (org-roam-node-properties
                             node)))
 
-(defun org-roam-timestamps--remove-current-mtime ()
-  "Remove the timestamps for the node at the current point."
-       (if-let ((mtime (org-roam-timestamps--get-mtime
-                        ((org-roam-populate (org-roam-node-create :id (org-roam-id-at-point))))))
-         (org-roam-remove-property "mtime" mtime))))
+(defun org-roam-timestamps--remove-current-mtime (node)
+  "Remove the timestamps for the NODE at the current point."
+      (if-let ((mtime (org-roam-timestamps--get-mtime node))
+               (split (split-string mtime)))
+       (unless (length= split 1)
+         (dolist (time split)
+         (org-roam-remove-property "mtime" time)))))
 
 (defun org-roam-timestamps-decode (mtime)
   "Decode a list of seconds since 1970 MTIME to an org-roam-timestamp."
