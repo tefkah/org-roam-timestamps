@@ -65,7 +65,8 @@ Defaults to an hour."
     (if-let ((creation-time (org-roam-timestamps--get-ctime node))
              (ctime (car (split-string creation-time))))
         nil
-                  (if-let ((filename (file-name-base file))
+                  (if-let ((level (eq 0 (org-roam-node-level node)))
+                           (filename (file-name-base file))
                            (index (string-match "^[0-9]\\{14\\}" filename))
                            (timestamp (substring filename index (+ index 14))))
                       (org-roam-add-property timestamp "ctime")
@@ -86,7 +87,7 @@ Defaults to an hour."
     (unless org-roam-timestamps-remember-timestamps
       (org-roam-timestamps--remove-current-mtime node))
     (org-roam-timestamps--add-mtime mtime))
-    (org-roam-add-property (org-roam-node-file-mtime node) "mtime")))))
+    (org-roam-add-property (org-roam-timestamps-decode (org-roam-node-file-mtime node)) "mtime")))))
 
 (defun org-roam-timestamps--add-mtime (&optional mtime)
   "Add the current mtime to the node.
