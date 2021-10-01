@@ -61,8 +61,17 @@ Defaults to an hour."
   "Set the MTIME property of the current org-roam-node to the current time."
   (when (org-roam-buffer-p)
   (let* ((node (org-roam-populate (org-roam-node-create :id (org-roam-id-at-point))))
-         (file (org-roam-node-file node))
-         (mtime (car (split-string (org-roam-timestamps--get-mtime node)))))
+         (file (org-roam-node-file node)))
+    (if-let ((creation-time (org-roam-timestamps--get-ctime node))
+             (ctime (car (split-string creation-time))))
+        nil
+                  (if-let ((filename (file-name-base file))
+                           (index (string-match "^[0-9]\\{14\\}" filename))
+                           (timestamp (substring filename index (+ index 14))))
+                      (org-roam-add-property timestamp "ctime")
+                    (org-roam-add-property (org-roam-timestamps-decode (org-roam-node-file-mtime node)) "ctime")))
+    (if-let ((mod-time (org-roam-timestamps--get-mtime node))
+             (mtime (car (split-string mod-time ))))
     (when org-roam-timestamps-timestamp-parent-file
         (org-roam-with-file file nil
           (save-excursion
@@ -75,7 +84,8 @@ Defaults to an hour."
                 (org-roam-timestamps--add-mtime pmtime)))))
     (unless org-roam-timestamps-remember-timestamps
       (org-roam-timestamps--remove-current-mtime))
-    (org-roam-timestamps--add-mtime mtime))))
+    (org-roam-timestamps--add-mtime mtime)
+    (org-roam-add-property (org-roam-node-file-mtime node) "mtime")))))
 
 (defun org-roam-timestamps--add-mtime (&optional mtime)
   "Add the current mtime to the node.
@@ -91,6 +101,11 @@ Optionally checks the minimum time interval you want between mod times."
 (defun org-roam-timestamps--get-mtime (node)
   "Get the mtime of the org-roam node NODE."
   (assoc-default "MTIME" (org-roam-node-properties
+                            node)))
+
+(defun org-roam-timestamps--get-ctime (node)
+  "Get the mtime of the org-roam node NODE."
+  (assoc-default "CTIME" (org-roam-node-properties
                             node)))
 
 (defun org-roam-timestamps--remove-current-mtime ()
