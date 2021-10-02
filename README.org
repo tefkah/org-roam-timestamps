@@ -30,7 +30,7 @@ We ain't on MELPA yet.
 
 #+begin_src emacs-lisp :tangle yes
 ;;packages.el
-(package! org-roam-ui :recipe (:host github :repo "ThomasFKJorna/org-roam-timestamps"))
+(package! org-roam-timestamps :recipe (:host github :repo "ThomasFKJorna/org-roam-timestamps"))
 #+end_src
 
 #+begin_src emacs-lisp :tangle yes
