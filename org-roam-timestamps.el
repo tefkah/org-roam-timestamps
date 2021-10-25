@@ -62,42 +62,59 @@ Defaults to one hour."
   (when (org-roam-buffer-p)
     (let* ((node (org-roam-populate (org-roam-node-create :id (org-roam-id-at-point))))
            (file (org-roam-node-file node))
+           (pos (org-roam-node-point node))
+           (level (org-roam-node-level node))
            (mtime (org-roam-timestamps--get-mtime node)))
-      (when org-roam-timestamps-timestamp-parent-file
-        (org-roam-with-file file nil
-          (save-excursion
-            (goto-char (buffer-end -1))
-            (let* ((pnode (org-roam-populate (org-roam-node-create :id (org-roam-id-at-point))))
-                   (pfile (org-roam-node-file node))
-                   (pmtime (org-roam-timestamps--get-mtime node)))
-              (unless org-roam-timestamps-remember-timestamps
-                (org-roam-timestamps--remove-current-mtime))
-              (org-roam-timestamps--add-mtime pmtime)))))
+      (when (and org-roam-timestamps-timestamp-parent-file (not (eq level 0)))
+        (let* ((pnode (org-roam-timestamps--get-parent-file-node file))
+               (pmtime (org-roam-timestamps--get-mtime pnode)))
+          (unless org-roam-timestamps-remember-timestamps
+            (org-roam-timestamps--remove-mtime pnode))
+          (org-roam-timestamps--add-mtime (buffer-end -1) file pmtime )))
       (unless org-roam-timestamps-remember-timestamps
-        (org-roam-timestamps--remove-current-mtime))
-      (org-roam-timestamps--add-mtime mtime))))
+        (org-roam-timestamps--remove-mtime node))
+      (org-roam-timestamps--add-mtime pos file mtime))))
 
-(defun org-roam-timestamps--add-mtime (&optional mtime)
-  "Add the current time MTIME to the node.
-Optionally checks the minimum time interval you want between mod times."
-  (let ((curr (org-roam-timestamps-decode (current-time))))
-    (if (and org-roam-timestamps-remember-timestamps mtime)
-        (when (> (org-roam-timestamps-subtract curr mtime t) org-roam-timestamps-minimum-gap)
-          (org-roam-add-property (org-roam-timestamps-decode (current-time)) "mtime")
-          (save-buffer))
-      (org-roam-add-property curr "mtime")
-      (save-buffer))))
+(defun org-roam-timestamps--add-mtime (pos file &optional mtime )
+  "Add the current time to the node at POS in file FILE.
+Optionally checks the minimum time interval you want between mod times
+if you supply the current MTIME."
+  (org-roam-with-file file nil
+    (save-excursion
+      (goto-char pos)
+      (let ((curr (org-roam-timestamps-decode (current-time))))
+        (if (and org-roam-timestamps-remember-timestamps mtime)
+            (when (> (org-roam-timestamps-subtract curr mtime t) org-roam-timestamps-minimum-gap)
+              (org-roam-add-property (org-roam-timestamps-decode (current-time)) "mtime")
+              (save-buffer))
+          (org-roam-add-property curr "mtime")
+          (save-buffer))))))
 
 (defun org-roam-timestamps--get-mtime (node)
   "Get the mtime of the org-roam node NODE."
   (assoc-default "MTIME" (org-roam-node-properties
                           node)))
 
-(defun org-roam-timestamps--remove-current-mtime ()
+(defun org-roam-timestamps--remove-mtime (node)
+  "Remove the timestamps for the node NODE."
+  (if-let ((mtime (org-roam-timestamps--get-mtime node)))
+      (org-roam-remove-property "mtime" mtime)))
+
+(defun org-roam-timestamps--remove-mtime-at-point ()
   "Remove the timestamps for the node at the current point."
   (if-let ((mtime (org-roam-timestamps--get-mtime
-                   ((org-roam-populate (org-roam-node-create :id (org-roam-id-at-point))))))
-           (org-roam-remove-property "mtime" mtime))))
+                   ((org-roam-populate (org-roam-node-create :id (org-roam-id-at-point)))))))
+      (org-roam-remove-property "mtime" mtime)))
+
+
+(defun org-roam-timestamps--get-parent-file-id (file)
+  "Find the top level node-id of FILE."
+  (caar (org-roam-db-query `[:select nodes:id :from nodes :where (and (= nodes:file ,file) (= nodes:level 0))])))
+
+(defun org-roam-timestamps--get-parent-file-node (file)
+  "Find the top level node of FILE."
+  (org-roam-node-from-id (org-roam-timestamps--get-parent-file-id file)))
+
 
 (defun org-roam-timestamps-decode (mtime)
   "Decode a list of seconds since 1970 MTIME to an org-roam-timestamp."
