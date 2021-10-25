@@ -42,7 +42,7 @@ but will increase note and db file size."
 (defcustom org-roam-timestamps-minimum-gap 3600
   "Minimal timedelay between successive mtime recordings in seconds.
 Only does something when `org-roam-timestamps-remember-timestamps' is t.
-Defaults to an hour."
+Defaults to one hour."
   :group 'org-roam-timestamps
   :type 'number)
 
