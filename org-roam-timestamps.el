@@ -54,8 +54,8 @@ Defaults to one hour."
   :lighter " org-roam-timestamps"
   :init-value nil
   (if org-roam-timestamps-mode
-      (add-hook 'after-save-hook #'org-roam-timestamps--on-save)
-    (remove-hook 'after-save-hook #'org-roam-timestamps--on-save)))
+      (add-hook 'before-save-hook #'org-roam-timestamps--on-save)
+    (remove-hook 'before-save-hook #'org-roam-timestamps--on-save)))
 
 (defun org-roam-timestamps--on-save ()
   "Set the MTIME property of the current org-roam-node to the current time."
@@ -79,21 +79,17 @@ Defaults to one hour."
   "Add the current time to the node at POS in file FILE.
 Optionally checks the minimum time interval you want between mod times
 if you supply the current MTIME."
-  (org-roam-with-file file nil
-    (save-excursion
-      (goto-char pos)
+    (org-with-wide-buffer
       (let ((curr (org-roam-timestamps-decode (current-time))))
         (if (and org-roam-timestamps-remember-timestamps mtime)
             (when (> (org-roam-timestamps-subtract curr mtime t) org-roam-timestamps-minimum-gap)
-              (org-roam-add-property (org-roam-timestamps-decode (current-time)) "mtime")
-              (save-buffer))
-          (org-roam-add-property curr "mtime")
-          (save-buffer))))))
+              (org-entry-put pos "mtime" (concat (org-roam-timestamps-decode (current-time)) " " mtime)))
+          (org-entry-put pos "mtime" curr)))))
 
 (defun org-roam-timestamps--get-mtime (node)
   "Get the mtime of the org-roam node NODE."
-  (assoc-default "MTIME" (org-roam-node-properties
-                          node)))
+  (org-roam-with-temp-buffer (org-roam-node-file node)
+  (org-entry-get (org-roam-node-point node) "mtime")))
 
 (defun org-roam-timestamps--remove-mtime (node)
   "Remove the timestamps for the node NODE."
@@ -103,7 +99,7 @@ if you supply the current MTIME."
 (defun org-roam-timestamps--remove-mtime-at-point ()
   "Remove the timestamps for the node at the current point."
   (if-let ((mtime (org-roam-timestamps--get-mtime
-                   ((org-roam-populate (org-roam-node-create :id (org-roam-id-at-point)))))))
+                   ((org-roam-node-at-point)))))
       (org-roam-remove-property "mtime" mtime)))
 
 
