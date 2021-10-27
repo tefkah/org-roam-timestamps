@@ -140,7 +140,7 @@ ctime."
         el)
     (dotimes (i 6 )
       (setq el (number-to-string (nth i time)))
-      (when (length= el 1) (setq el (concat "0" el)))
+      (when (eq (length el) 1) (setq el (concat "0" el)))
       (setq dec-time
             (concat el dec-time)))
     dec-time))
