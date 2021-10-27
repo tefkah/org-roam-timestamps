@@ -1,4 +1,4 @@
-;;; org-roam-timestamps.el --- m/ctime properties for org-roam -*- lexical-binding: t; -*-
+;;; org-roam-timestamps.el --- Keep track of modification times for org-roam -*- lexical-binding: t; -*-
 ;;
 ;; Copyright (C) 2021 Thomas F. K. Jorna
 ;;
@@ -6,16 +6,20 @@
 ;; Maintainer: Thomas F. K. Jorna <jorna@jtrialerror.com>
 ;; Created: September 27, 2021
 ;; Modified: September 27, 2021
-;; Version: 0.0.1
-;; Keywords: org-roam zettelkasten time
+;; Version: 1.0.0
+;; Keywords: calendar outlines files
 ;; Homepage: https://github.com/thomas/org-roam-timestamps
-;; Package-Requires: ((emacs "26.1") org-roam)
+;; Package-Requires: ((emacs "26.1") (org-roam "2.0.0"))
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
 ;;; Commentary:
 ;;
-;;
+;; Automatically add modified and creation times to org-roam-nodes'
+;; property drawers. Main usecase will be for org-roam-ui, but can still
+;; be useful for other application which wish to sort nodes, not files,
+;; by their modification time, and also keep track of creation times
+;; without relying on the org-roam-slug.
 ;;
 ;;; Code:
 
@@ -80,37 +84,26 @@ Defaults to one hour."
 
 (defun org-roam-timestamps--add-mtime (node &optional mtime)
   "Add the current time to the node NODE.
+
 Optionally checks the minimum time interval you want between mod times
 if you supply the current MTIME."
-  (let ((pos (org-roam-node-point node))
-        (file (org-roam-node-file node)))
   (org-with-wide-buffer
-   (let ((curr (org-roam-timestamps-decode (current-time))))
+   (let ((pos (org-roam-node-point node))
+         (curr (org-roam-timestamps-decode (current-time))))
      (if (and org-roam-timestamps-remember-timestamps mtime)
          (when (> (org-roam-timestamps-subtract curr mtime t) org-roam-timestamps-minimum-gap)
            (org-entry-put pos "mtime" (concat (org-roam-timestamps-decode (current-time)) " " mtime)))
-       (org-entry-put pos "mtime" curr))))))
+       (org-entry-put pos "mtime" curr)))))
 
 (defun org-roam-timestamps--get-mtime (node)
   "Get the mtime of the org-roam node NODE."
-    (org-with-wide-buffer
-     (org-entry-get (org-roam-node-point node) "mtime")))
-
-;; (defun org-roam-timestamps--remove-mtime (node)
-;;   "Remove the timestamps for the node NODE."
-;;   (if-let ((mtime (org-roam-timestamps--get-mtime node)))
-;;       (org-roam-remove-property "mtime" mtime)))
-
-;; (defun org-roam-timestamps--remove-mtime-at-point ()
-;;   "Remove the timestamps for the node at the current point."
-;;   (if-let ((mtime (org-roam-timestamps--get-mtime
-;;                    ((org-roam-node-at-point)))))
-;;       (org-roam-remove-property "mtime" mtime)))
+  (org-with-wide-buffer
+   (org-entry-get (org-roam-node-point node) "mtime")))
 
 (defun org-roam-timestamps--get-ctime (pos)
   "Return the current ctime for the node at point POS."
-    (org-with-wide-buffer
-     (org-entry-get pos "ctime")))
+  (org-with-wide-buffer
+   (org-entry-get pos "ctime")))
 
 (defun org-roam-timestamps--add-ctime (node)
   "Return the current ctime for the node NODE.
@@ -166,7 +159,7 @@ ctime."
   "Return the difference between two timestamps T1 and T2, as a time value.
 If ABS is non-nil, return the absolute value."
   (let ((time
-         (subtract-time (org-roam-timestamps-encode t1) (org-roam-timestamps-encode t2))))
+         (time-subtract (org-roam-timestamps-encode t1) (org-roam-timestamps-encode t2))))
     (if abs
         (abs time)
       time)))
@@ -187,13 +180,11 @@ This might take a second. Are you sure you want to continue?")
       (copy-file org-roam-db-location backup-db))
     (let ((nodes (org-roam-db-query [:select id :from nodes])))
       (dolist (node nodes)
-        (let* ((n (org-roam-populate (org-roam-node-create :id (car node))))
+        (let* ((n (org-roam-node-from-id (car node)))
                (file (org-roam-node-file n))
                (mtime (org-roam-timestamps-decode (org-roam-node-file-mtime n)))
                (pos (org-roam-node-point n))
-               (props (org-roam-node-properties n))
-               (level (org-roam-node-level n))
-               (title (org-roam-node-title n)))
+               (props (org-roam-node-properties n)))
           (org-roam-with-file file nil
             (goto-char pos)
             (unless (assoc-default "MTIME" props)
@@ -213,20 +204,14 @@ This might take a second. Are you sure you want to continue?")
   (org-roam-timestamps-mode -1)
   (let ((nodes (org-roam-db-query [:select id :from nodes])))
     (dolist (node nodes)
-      (let* ((n (org-roam-populate (org-roam-node-create :id (car node))))
+      (let* ((n (org-roam-node-from-id (car node)))
              (file (org-roam-node-file n))
-             (pos (org-roam-node-point n))
-             (props (org-roam-node-properties n))
-             (level (org-roam-node-level n))
-             (title (org-roam-node-title n)))
+             (pos (org-roam-node-point n)))
         (org-roam-with-file file nil
-          (goto-char pos)
+          (org-with-wide-buffer
           (if-let ((mtime (org-roam-timestamps--get-mtime n))
                    (split (split-string mtime)))
-              (unless (length= split 1)
-                (dolist (time split)
-                  (org-roam-remove-property "mtime" time))
-                (org-roam-add-property (car split) "mtime")
+                (org-entry-put pos "mtime"  (car split))
                 (save-buffer)))))))
   (org-roam-timestamps-mode 1))
 
