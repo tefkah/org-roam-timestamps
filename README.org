@@ -1,6 +1,4 @@
-:PROPERTIES:
-:ID:       2ebc4440-a2e3-4ad1-81d6-a5b9194a9157
-:END:
+[[https://melpa.org/#/org-roam-timestamps][file:https://melpa.org/packages/org-roam-timestamps-badge.svg]]
 
 * org-roam-timestamps
 
@@ -24,19 +22,25 @@ Most basic use case:
 
 * Installation
 
-We ain't on MELPA yet.
+org-roam-timestamps is on MELPA!
 
 ** Doom emacs
 
 #+begin_src emacs-lisp :tangle yes
 ;;packages.el
-(package! org-roam-timestamps :recipe (:host github :repo "ThomasFKJorna/org-roam-timestamps"))
+(package! org-roam-timestamps)
 #+end_src
 
 #+begin_src emacs-lisp :tangle yes
 (use-package! org-roam-timestamps
   :after org-roam
   :config (org-roam-timestamps-mode))
+#+end_src
+
+** package.el
+
+#+begin_src emacs-lisp 
+M-x package-install org-roam-timestamps
 #+end_src
 
 * Customizations
