@@ -8,7 +8,7 @@
 ;; Modified: September 27, 2021
 ;; Version: 1.0.0
 ;; Keywords: calendar outlines files
-;; Homepage: https://github.com/thomas/org-roam-timestamps
+;; Homepage: https://github.com/ThomasFKJorna/org-roam-timestamps
 ;; Package-Requires: ((emacs "26.1") (org-roam "2.0.0"))
 ;;
 ;; This file is not part of GNU Emacs.
