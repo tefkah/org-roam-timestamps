@@ -133,7 +133,7 @@ ctime."
     (save-excursion
       (org-with-wide-buffer
        (if-let
-           ((toplevel (= 0 level))
+           ((toplevel (= 0 (or level 0)))
             (filename (file-name-base file))
             (index (string-match "^[0-9]\\{14\\}" filename))
             (timestamp (substring filename index (+ index 14))))
