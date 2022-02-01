@@ -103,7 +103,7 @@ Defaults to one hour."
 Optionally checks the minimum time interval you want between mod times
 if you supply the current MTIME."
   (org-with-wide-buffer
-   (let ((pos (org-roam-node-point node))
+   (let ((pos (if node (org-roam-node-point node) (point-marker)))
          (curr (org-roam-timestamps-decode (current-time))))
      (if (and org-roam-timestamps-remember-timestamps mtime)
          (when (> (org-roam-timestamps-subtract curr mtime t) org-roam-timestamps-minimum-gap)
