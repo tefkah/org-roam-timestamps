@@ -113,7 +113,7 @@ if you supply the current MTIME."
 (defun org-roam-timestamps--get-mtime (node)
   "Get the mtime of the org-roam node NODE."
   (org-with-wide-buffer
-   (org-entry-get (org-roam-node-point node) "mtime")))
+   (org-entry-get (if node (org-roam-node-point node) (point-marker)) "mtime")))
 
 (defun org-roam-timestamps--get-ctime (pos)
   "Return the current ctime for the node at point POS."
