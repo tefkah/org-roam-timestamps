@@ -49,7 +49,7 @@ Org-roam-timestamps exposes three variables for customization
 
 ** Parent file
 #+begin_src emacs-lisp
-(setq org-roam-timestamps-parent-file t)
+(setq org-roam-timestamps-timestamp-parent-file t)
 #+end_src
 
 This will also update the parent file when you update a subnote.
